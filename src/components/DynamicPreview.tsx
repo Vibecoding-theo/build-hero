@@ -41,10 +41,35 @@ function buildHtml(code: string, fonts?: string[]): string {
   const nameMatch = code.match(/export\s+default\s+function\s+(\w+)/);
   const componentName = nameMatch ? nameMatch[1] : 'GeneratedHero';
 
+  // Helper: remove a JSX prop with balanced braces (handles nested objects like {{ opacity: 0 }})
+  function removeJsxProp(code: string, propName: string): string {
+    const regex = new RegExp(`\\s+${propName}=\\{`, 'g');
+    let result = code;
+    let match;
+    while ((match = regex.exec(result)) !== null) {
+      const start = match.index;
+      const braceStart = start + match[0].length - 1;
+      let depth = 0;
+      let i = braceStart;
+      for (; i < result.length; i++) {
+        if (result[i] === '{') depth++;
+        else if (result[i] === '}') {
+          depth--;
+          if (depth === 0) break;
+        }
+      }
+      if (depth === 0) {
+        result = result.slice(0, start) + result.slice(i + 1);
+        regex.lastIndex = 0; // reset after string modification
+      }
+    }
+    return result;
+  }
+
   // Transform the code for the iframe
-  const transformedCode = code
-    // Strip 'use client' directive
-    .replace(/^['"]use client['"];?\s*/gm, '')
+  let transformedCode = code
+    // Strip 'use client' directive (any quote style)
+    .replace(/^['"`]?use client['"`]?;?\s*$/gm, '')
     // Remove all import statements (single-line and multi-line)
     .replace(/^import\s+[\s\S]*?from\s+['"].*['"];?\s*$/gm, '')
     // Convert default export to plain function
@@ -53,25 +78,21 @@ function buildHtml(code: string, fonts?: string[]): string {
     // Replace motion.* JSX tags with regular tags
     .replace(/<motion\.(\w+)/g, '<$1')
     .replace(/<\/motion\.(\w+)>/g, '</$1>')
-    // Remove Framer Motion props
-    .replace(/\s+initial=\{[^}]*\}/g, '')
-    .replace(/\s+animate=\{[^}]*\}/g, '')
-    .replace(/\s+transition=\{[^}]*\}/g, '')
-    .replace(/\s+whileHover=\{[^}]*\}/g, '')
-    .replace(/\s+whileTap=\{[^}]*\}/g, '')
-    .replace(/\s+whileInView=\{[^}]*\}/g, '')
-    .replace(/\s+viewport=\{[^}]*\}/g, '')
-    .replace(/\s+layoutId="[^"]*"/g, '')
-    .replace(/\s+layoutId=\{[^}]*\}/g, '')
-    .replace(/\s+exit=\{[^}]*\}/g, '')
-    .replace(/(\s)layout(?=[\s\n\r}])/g, '$1')
     // Remove AnimatePresence and Suspense wrappers
     .replace(/<AnimatePresence[^>]*>\s*/g, '')
     .replace(/\s*<\/AnimatePresence>/g, '')
     .replace(/<Suspense[^>]*>\s*/g, '')
     .replace(/\s*<\/Suspense>/g, '')
-    // Convert className to class
-    .replace(/className=/g, 'class=');
+    // Remove layout prop (boolean)
+    .replace(/(\s)layout(?=[\s\n\r}])/g, '$1')
+    // Remove layoutId string prop
+    .replace(/\s+layoutId="[^"]*"/g, '');
+
+  // Remove Framer Motion props with proper brace matching
+  const motionProps = ['initial', 'animate', 'transition', 'whileHover', 'whileTap', 'whileInView', 'viewport', 'exit', 'variants'];
+  for (const prop of motionProps) {
+    transformedCode = removeJsxProp(transformedCode, prop);
+  }
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -146,8 +167,8 @@ function buildHtml(code: string, fonts?: string[]): string {
     .animate-morph-blob { animation: morphBlob 8s ease-in-out infinite; }
     .animate-scanline { animation: scanline 4s linear infinite; }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/react@19/umd/react.production.min.js" crossorigin><\/script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@19/umd/react-dom.production.min.js" crossorigin><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"><\/script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"><\/script>
 </head>
 <body>
@@ -158,13 +179,13 @@ function buildHtml(code: string, fonts?: string[]): string {
     }
     try {
       var inputCode = ${JSON.stringify(transformedCode)};
-      var renderCode = inputCode + '\\n\\nvar Component = typeof ${componentName} === \"function\" ? ${componentName} : null; if (Component) { ReactDOM.createRoot(document.getElementById(\"root\")).render(React.createElement(Component)); } else { showError(\"Composant introuvable\", \"${componentName}\"); }';
+      var renderCode = inputCode + '\\n\\ntry { var Component = typeof ${componentName} === \"function\" ? ${componentName} : null; if (Component) { ReactDOM.createRoot(document.getElementById(\"root\")).render(React.createElement(Component)); } else { showError(\"Composant introuvable\", \"${componentName}\"); } } catch(e) { showError(\"Erreur de rendu\", e.message + \"\\\\n\\\\n\" + e.stack); }';
       var output = Babel.transform(renderCode, { presets: ['typescript', 'react'], filename: 'file.tsx' });
       var script = document.createElement('script');
       script.textContent = output.code;
       document.body.appendChild(script);
     } catch(e) {
-      showError('Erreur Babel / Rendu', e.message);
+      showError('Erreur Babel', e.message);
       console.error(e);
     }
   <\/script>
