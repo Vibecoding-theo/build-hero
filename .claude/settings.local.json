@@ -4,7 +4,9 @@
       "Bash(npm install:*)",
       "Bash(npx next:*)",
       "Bash(npm ls:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)"
     ]
   }
 }

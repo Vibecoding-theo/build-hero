@@ -45,9 +45,8 @@ function buildHtml(code: string, fonts?: string[]): string {
   const transformedCode = code
     // Strip 'use client' directive
     .replace(/^['"]use client['"];?\s*/gm, '')
-    // Remove all import statements
-    .replace(/^import\s+.*from\s+['"].*['"];?\s*$/gm, '')
-    .replace(/import\s*\{[^}]*\}\s*from\s+['"].*['"];?\s*$/gm, '')
+    // Remove all import statements (single-line and multi-line)
+    .replace(/^import\s+[\s\S]*?from\s+['"].*['"];?\s*$/gm, '')
     // Convert default export to plain function
     .replace(/export\s+default\s+function\s+(\w+)/, 'function $1')
     .replace(/export\s+default\s+/g, '')
@@ -65,7 +64,6 @@ function buildHtml(code: string, fonts?: string[]): string {
     .replace(/\s+layoutId="[^"]*"/g, '')
     .replace(/\s+layoutId=\{[^}]*\}/g, '')
     .replace(/\s+exit=\{[^}]*\}/g, '')
-    // Remove layout prop only when used as a standalone boolean prop
     .replace(/(\s)layout(?=[\s\n\r}])/g, '$1')
     // Remove AnimatePresence and Suspense wrappers
     .replace(/<AnimatePresence[^>]*>\s*/g, '')
@@ -73,9 +71,7 @@ function buildHtml(code: string, fonts?: string[]): string {
     .replace(/<Suspense[^>]*>\s*/g, '')
     .replace(/\s*<\/Suspense>/g, '')
     // Convert className to class
-    .replace(/className=/g, 'class=')
-    // Clean up useEffect for font loading
-    .replace(/useEffect\(\s*\(\)\s*=>\s*\{[^}]*import\([^)]*\)[^}]*\}/g, '/* font loading handled externally */');
+    .replace(/className=/g, 'class=');
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -156,21 +152,20 @@ function buildHtml(code: string, fonts?: string[]): string {
 </head>
 <body>
   <div id="root"></div>
-  <script type="text/babel">
-    ${transformedCode}
-
+  <script>
+    function showError(title, msg) {
+      document.getElementById('root').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#888;font-family:sans-serif;"><div style="text-align:center;max-width:600px;padding:20px;"><p style="font-size:18px;margin-bottom:12px;color:#e55;">' + title + '</p><pre style="text-size:12px;color:#666;white-space:pre-wrap;word-break:break-all;text-align:left;">' + (msg || 'Unknown error').replace(/</g, '&lt;') + '</pre></div></div>';
+    }
     try {
-      const Component = typeof ${componentName} === 'function' ? ${componentName} : null;
-
-      if (Component) {
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(Component));
-      } else {
-        document.getElementById('root').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#888;font-family:sans-serif;"><p>Composant non trouv\u00e9 : ${componentName}</p></div>';
-      }
+      var inputCode = ${JSON.stringify(transformedCode)};
+      var renderCode = inputCode + '\\n\\nvar Component = typeof ${componentName} === \"function\" ? ${componentName} : null; if (Component) { ReactDOM.createRoot(document.getElementById(\"root\")).render(React.createElement(Component)); } else { showError(\"Composant introuvable\", \"${componentName}\"); }';
+      var output = Babel.transform(renderCode, { presets: ['typescript', 'react'], filename: 'file.tsx' });
+      var script = document.createElement('script');
+      script.textContent = output.code;
+      document.body.appendChild(script);
     } catch(e) {
-      document.getElementById('root').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#888;font-family:sans-serif;"><div style="text-align:center;max-width:500px;padding:20px;"><p style="font-size:18px;margin-bottom:12px;color:#e55;">Erreur de rendu</p><p style="font-size:13px;color:#666;word-break:break-all;">' + e.message + '</p></div></div>';
-      console.error('Render error:', e);
+      showError('Erreur Babel / Rendu', e.message);
+      console.error(e);
     }
   <\/script>
 </body>

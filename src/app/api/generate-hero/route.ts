@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import ZAI from 'z-ai-web-dev-sdk';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL = 'llama-3.3-70b-versatile';
 
 const STYLE_PRESETS: Record<string, string> = {
   glassmorphism: 'Glassmorphism : effets de flou (backdrop-blur), transparence, bordures arrondies (rounded-2xl/3xl), tons pastels, cartes semi-transparentes avec backdrop-blur-xl',
@@ -40,6 +44,14 @@ const FONT_PRESETS: Record<string, { name: string; family: string; category: str
 
 export async function POST(request: NextRequest) {
   try {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'GROQ_API_KEY manquante. Ajoute-la dans .env.local' },
+        { status: 500 }
+      );
+    }
+
     const { prompt, styles, fonts } = await request.json();
 
     if (!prompt) {
@@ -95,6 +107,36 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Load a reference hero matching the primary style
+    let referenceCode = '';
+    try {
+      const styleToFile: Record<string, string> = {
+        glassmorphism: 'HeroGlassmorphism.tsx',
+        brutalism: 'HeroBrutalism.tsx',
+        cyberpunk: 'HeroCyberpunk.tsx',
+        minimal: 'HeroJapandi.tsx',
+        organic: 'HeroOrganic.tsx',
+        luxury: 'HeroDarkLuxury.tsx',
+        retro: 'HeroRetroVintage.tsx',
+        geometric: 'HeroGeometric.tsx',
+        aurora: 'HeroAurora.tsx',
+        gradient: 'HeroAurora.tsx',
+        neumorphism: 'HeroGlassmorphism.tsx',
+        darkmode: 'HeroDarkLuxury.tsx',
+      };
+      const refFile = styleToFile[styles[0]] || 'HeroGlassmorphism.tsx';
+      referenceCode = await fs.readFile(
+        path.join(process.cwd(), 'src', 'components', 'heroes', refFile),
+        'utf-8'
+      );
+    } catch {
+      // Reference not available, continue without it
+    }
+
+    const referenceSection = referenceCode
+      ? `\n\nRÉFÉRENCE — Voici un composant Hero existant dans ce style. Inspire-toi de sa structure, ses patterns et sa qualité, mais crée un design DIFFÉRENT avec le contenu demandé :\n\`\`\`tsx\n${referenceCode}\n\`\`\``
+      : '';
+
     const systemPrompt = `Tu es un expert React/TypeScript qui génère des composants Hero (page d'accueil) de haute qualité.
 
 CONTEXTE : L'app utilise Next.js 16 avec App Router, TypeScript, Tailwind CSS 4, et Framer Motion.
@@ -116,6 +158,7 @@ RÈGLES STRICTES :
 ${styleInstructions}
 ${borderInfo}
 ${fontInstruction}
+${referenceSection}
 
 FORMAT DE RÉPONSE : Renvoie UNIQUEMENT le code TypeScript/React complet, sans explication, sans bloc markdown (pas de \`\`\`). Juste le code brut.`;
 
@@ -130,18 +173,35 @@ Assure-toi que le design est visuellement impressionnant, unique et professionne
 - Des éléments décoratifs visuels (formes, patterns, gradients)
 - Des animations Framer Motion fluides`;
 
-    const zai = await ZAI.create();
-
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.85,
-      max_tokens: 8000,
+    // Call Groq API
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.85,
+        max_tokens: 8000,
+      }),
     });
 
-    let code = completion.choices[0]?.message?.content?.trim() ?? '';
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Groq API error (${response.status}): ${errText}`);
+    }
+
+    const data = await response.json();
+    let code = data.choices?.[0]?.message?.content?.trim() ?? '';
+
+    if (!code) {
+      throw new Error('Empty response from Groq API');
+    }
 
     // Clean up code if wrapped in markdown
     if (code.startsWith('```tsx')) {

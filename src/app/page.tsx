@@ -584,10 +584,13 @@ function SidebarContent({ heroes, customHeroes, activeId, onSelect, onDelete }: 
             </div>
           </div>
           {customHeroes.map((h) => (
-            <button
+            <div
               key={h.id}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelect(h.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 group relative ${
+              onKeyDown={(e) => { if (e.key === 'Enter') onSelect(h.id); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 group relative cursor-pointer ${
                 activeId === h.id ? 'text-white' : 'text-white/50 hover:text-white/80 hover:bg-white/[0.03]'
               }`}
             >
@@ -611,7 +614,7 @@ function SidebarContent({ heroes, customHeroes, activeId, onSelect, onDelete }: 
               >
                 <TrashIcon />
               </button>
-            </button>
+            </div>
           ))}
         </>
       )}
