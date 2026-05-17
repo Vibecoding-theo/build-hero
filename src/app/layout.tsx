@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hero Gallery — 9 Designs Uniques",
-  description: "Galerie de pages héros avec designs uniques : Glassmorphism, Brutalism, Cyberpunk, Japandi, Organic, Dark Luxury, Retro, Geometric, Aurora.",
-  keywords: ["hero", "design", "glassmorphism", "brutalism", "cyberpunk", "UI", "gallery"],
+  title: "Build Hero",
+  description: "Créez des sections hero uniques avec Build Hero : 9 designs prêts à l'emploi et génération par IA.",
+  keywords: ["hero", "design", "builder", "landing page", "AI", "glassmorphism", "brutalism", "cyberpunk", "UI"],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo-B-heo.png",
   },
 };
 

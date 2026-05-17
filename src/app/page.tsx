@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import HeroGlassmorphism from '@/components/heroes/HeroGlassmorphism';
 import HeroBrutalism from '@/components/heroes/HeroBrutalism';
@@ -263,10 +264,8 @@ export default function Home() {
             <SidebarIcon />
           </button>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', color: 'white' }}>
-              H
-            </div>
-            <span className="text-base font-semibold text-white hidden sm:block">Hero <span className="font-light text-white/30">Studio</span></span>
+            <Image src="/logo-B-heo.png" alt="Build Hero" width={28} height={28} className="rounded-lg" />
+            <span className="text-base font-semibold text-white hidden sm:block">Build <span className="font-light text-white/30">Hero</span></span>
           </div>
 
           {/* View mode tabs */}
