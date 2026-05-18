@@ -206,13 +206,17 @@ const DynamicPreview = forwardRef<HTMLDivElement, DynamicPreviewProps>(
       if (!code || !iframeRef.current) return;
 
       let cancelled = false;
+      let blobUrl: string | null = null;
       setError(null);
       setLoading(true);
 
       try {
         const html = buildHtml(code, fonts);
+        const blob = new Blob([html], { type: 'text/html' });
+        blobUrl = URL.createObjectURL(blob);
+
         if (!cancelled && iframeRef.current) {
-          iframeRef.current.srcdoc = html;
+          iframeRef.current.src = blobUrl;
         }
       } catch (err) {
         if (!cancelled) {
@@ -226,12 +230,14 @@ const DynamicPreview = forwardRef<HTMLDivElement, DynamicPreviewProps>(
       const iframe = iframeRef.current;
       const onLoad = () => {
         if (!cancelled) setLoading(false);
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
       };
       iframe?.addEventListener('load', onLoad);
 
       return () => {
         cancelled = true;
         iframe?.removeEventListener('load', onLoad);
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
       };
     }, [code, fonts, onRenderError]);
 
