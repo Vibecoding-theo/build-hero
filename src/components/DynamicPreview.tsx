@@ -197,7 +197,8 @@ const DynamicPreview = forwardRef<HTMLDivElement, DynamicPreviewProps>(
   ({ code, fonts, onRenderError }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useImperativeHandle(ref, () => containerRef.current!);
 
@@ -205,9 +206,15 @@ const DynamicPreview = forwardRef<HTMLDivElement, DynamicPreviewProps>(
       if (!code || !iframeRef.current) return;
 
       let cancelled = false;
+      setError(null);
+      setLoading(true);
+
+      // Reset iframe to blank while loading new content
+      if (iframeRef.current) {
+        iframeRef.current.src = 'about:blank';
+      }
 
       const loadPreview = async () => {
-        setLoading(true);
         try {
           // Build the full HTML document
           const html = buildHtml(code, fonts);
@@ -233,8 +240,10 @@ const DynamicPreview = forwardRef<HTMLDivElement, DynamicPreviewProps>(
             iframeRef.current.src = `/api/preview?id=${id}`;
           }
         } catch (err) {
-          if (!cancelled && onRenderError) {
-            onRenderError(err instanceof Error ? err.message : 'Preview failed');
+          if (!cancelled) {
+            const msg = err instanceof Error ? err.message : 'Preview failed';
+            setError(msg);
+            if (onRenderError) onRenderError(msg);
           }
         } finally {
           if (!cancelled) setLoading(false);
@@ -250,12 +259,19 @@ const DynamicPreview = forwardRef<HTMLDivElement, DynamicPreviewProps>(
 
     return (
       <div ref={containerRef} className="w-full h-full relative">
-        {loading && (
+        {(loading || error) && (
           <div className="absolute inset-0 flex items-center justify-center z-10" style={{ background: '#0F0F11' }}>
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/40 animate-spin" />
-              <span className="text-xs text-white/30">Chargement du preview...</span>
-            </div>
+            {error ? (
+              <div className="flex flex-col items-center gap-3 px-6 text-center">
+                <span className="text-red-400 text-2xl">⚠</span>
+                <p className="text-xs text-red-400/80 max-w-md">{error}</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/40 animate-spin" />
+                <span className="text-xs text-white/30">Chargement du preview...</span>
+              </div>
+            )}
           </div>
         )}
         <iframe

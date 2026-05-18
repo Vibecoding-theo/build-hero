@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama-3.3-70b-versatile';
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const MODEL = 'gpt-4o-mini';
 
 const STYLE_PRESETS: Record<string, string> = {
   glassmorphism: 'Glassmorphism : effets de flou (backdrop-blur), transparence, bordures arrondies (rounded-2xl/3xl), tons pastels, cartes semi-transparentes avec backdrop-blur-xl',
@@ -44,31 +44,129 @@ const FONT_PRESETS: Record<string, { name: string; family: string; category: str
 
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = process.env.GROQ_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'GROQ_API_KEY manquante. Ajoute-la dans .env.local' },
+        { error: 'OPENAI_API_KEY manquante. Ajoute-la dans .env' },
         { status: 500 }
       );
     }
 
-    const { prompt, styles, fonts } = await request.json();
+    const { prompt, styles, fonts, colors, existingCode, modifyPrompt } = await request.json();
 
-    if (!prompt) {
-      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
-    }
+    const isModify = !!existingCode && !!modifyPrompt;
 
-    if (!styles || !Array.isArray(styles) || styles.length === 0) {
-      return NextResponse.json({ error: 'At least one style is required' }, { status: 400 });
-    }
+    if (!isModify) {
+      if (!prompt) {
+        return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
+      }
 
-    // Validate styles
-    for (const s of styles) {
-      if (!STYLE_PRESETS[s]) {
-        return NextResponse.json({ error: `Invalid style: ${s}` }, { status: 400 });
+      if (!styles || !Array.isArray(styles) || styles.length === 0) {
+        return NextResponse.json({ error: 'At least one style is required' }, { status: 400 });
+      }
+
+      // Validate styles
+      for (const s of styles) {
+        if (!STYLE_PRESETS[s]) {
+          return NextResponse.json({ error: `Invalid style: ${s}` }, { status: 400 });
+        }
       }
     }
 
+    // ─── Modify mode (early return) ───
+    if (isModify) {
+      // Build color context for modify
+      let colorContext = '';
+      if (colors && Array.isArray(colors) && colors.length > 0) {
+        colorContext = `\n\nPALETTE DE COULEURS UTILISÉE — Si la modification demande des changements de couleur, utilise cette palette :\n${colors.map((c: string, i: number) => `  ${i + 1}. ${c}`).join('\n')}`;
+      }
+
+      // Build font context for modify
+      let fontContext = '';
+      if (fonts && Array.isArray(fonts) && fonts.length > 0) {
+        const validatedFonts = fonts.filter((f: string) => FONT_PRESETS[f]).map((f: string) => FONT_PRESETS[f]);
+        if (validatedFonts.length > 0) {
+          fontContext = `\n\nPOLICES UTILISÉES :\n${validatedFonts.map((f: { name: string; family: string }, i: number) => `  ${i + 1}. ${f.name} (font-family: ${f.family})`).join('\n')}`;
+        }
+      }
+
+      const modifySystemPrompt = `Tu es un expert React/TypeScript qui modifie des composants Hero existants.
+
+CONTEXTE : L'app utilise Next.js 16 avec App Router, TypeScript, Tailwind CSS 4, et Framer Motion.
+
+RÈGLES :
+1. Reprends EXACTEMENT le code existant et applique UNIQUEMENT les modifications demandées
+2. Conserve la structure globale, les animations, et le style existant
+3. Ne casse pas ce qui fonctionne déjà
+4. Le code doit rester COMPLET et fonctionnel
+5. N'ajoute PAS d'explications, de commentaires supplémentaires, ni de blocs markdown
+6. Le code DOIT commencer par 'use client';
+7. Le contenu textuel doit rester en FRANÇAIS
+${colorContext}${fontContext}
+
+FORMAT DE RÉPONSE : Renvoie UNIQUEMENT le code TypeScript/React complet modifié, sans explication, sans bloc markdown (pas de \`\`\`). Juste le code brut.`;
+
+      const modifyUserPrompt = `Voici le code du composant Hero actuel :
+
+${existingCode}
+
+MODIFICATION DEMANDÉE : ${modifyPrompt}
+
+Renvoie le code complet modifié. Ne change que ce qui est demandé, garde tout le reste identique. Assure-toi que le code est valide et complet.`;
+
+      const response = await fetch(OPENAI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: 'system', content: modifySystemPrompt },
+            { role: 'user', content: modifyUserPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 8000,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`OpenAI API error (${response.status}): ${errText}`);
+      }
+
+      const data = await response.json();
+      let code = data.choices?.[0]?.message?.content?.trim() ?? '';
+
+      if (!code) {
+        throw new Error('Empty response from OpenAI API');
+      }
+
+      // Clean up code if wrapped in markdown
+      const mdMatch = code.match(/```(?:tsx|typescript|jsx|javascript)?\s*\n([\s\S]*?)```/);
+      if (mdMatch) {
+        code = mdMatch[1].trim();
+      } else {
+        if (code.startsWith('```tsx')) code = code.slice(6);
+        else if (code.startsWith('```typescript')) code = code.slice(13);
+        else if (code.startsWith('```')) code = code.slice(3);
+        if (code.endsWith('```')) code = code.slice(0, -3);
+        code = code.trim();
+      }
+
+      // Ensure code starts with 'use client' if missing
+      if (!code.startsWith("'use client") && !code.startsWith('"use client')) {
+        code = "'use client';\n\n" + code;
+      }
+
+      const nameMatch = code.match(/export\s+default\s+function\s+(\w+)/);
+      const componentName = nameMatch ? nameMatch[1] : 'GeneratedHero';
+
+      return NextResponse.json({ code, componentName });
+    }
+
+    // ─── Generate mode (original) ───
     // Build style instructions
     let styleInstructions = '';
     if (styles.length === 1) {
@@ -105,6 +203,12 @@ export async function POST(request: NextRequest) {
 
         fontInstruction += `\nAssure-toi d'importer les Google Fonts nécessaires en haut du composant en utilisant un next/font/google ou en ajoutant un <link> dans un useEffect.`;
       }
+    }
+
+    // Build color instructions
+    let colorInstruction = '';
+    if (colors && Array.isArray(colors) && colors.length > 0) {
+      colorInstruction = `\n\nPALETTE DE COULEURS IMPOSÉE — Utilise EXCLUSIVEMENT ces couleurs dans le design (fonds, textes, bordures, dégradés, accents, boutons). Tu peux les utiliser en opacity différentes (via /opacity) et les combiner en dégradés, mais ne PAS introduire de nouvelles couleurs en dehors de cette palette :\n${colors.map((c: string, i: number) => `  ${i + 1}. ${c}`).join('\n')}`;
     }
 
     // Load a reference hero matching the primary style
@@ -158,6 +262,7 @@ RÈGLES STRICTES :
 ${styleInstructions}
 ${borderInfo}
 ${fontInstruction}
+${colorInstruction}
 ${referenceSection}
 
 FORMAT DE RÉPONSE : Renvoie UNIQUEMENT le code TypeScript/React complet, sans explication, sans bloc markdown (pas de \`\`\`). Juste le code brut.`;
@@ -173,8 +278,8 @@ Assure-toi que le design est visuellement impressionnant, unique et professionne
 - Des éléments décoratifs visuels (formes, patterns, gradients)
 - Des animations Framer Motion fluides`;
 
-    // Call Groq API
-    const response = await fetch(GROQ_API_URL, {
+    // Call OpenAI API
+    const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -193,28 +298,38 @@ Assure-toi que le design est visuellement impressionnant, unique et professionne
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Groq API error (${response.status}): ${errText}`);
+      throw new Error(`OpenAI API error (${response.status}): ${errText}`);
     }
 
     const data = await response.json();
     let code = data.choices?.[0]?.message?.content?.trim() ?? '';
 
     if (!code) {
-      throw new Error('Empty response from Groq API');
+      throw new Error('Empty response from OpenAI API');
     }
 
     // Clean up code if wrapped in markdown
-    if (code.startsWith('```tsx')) {
-      code = code.slice(6);
-    } else if (code.startsWith('```typescript')) {
-      code = code.slice(13);
-    } else if (code.startsWith('```')) {
-      code = code.slice(3);
+    const mdMatch = code.match(/```(?:tsx|typescript|jsx|javascript)?\s*\n([\s\S]*?)```/);
+    if (mdMatch) {
+      code = mdMatch[1].trim();
+    } else {
+      if (code.startsWith('```tsx')) {
+        code = code.slice(6);
+      } else if (code.startsWith('```typescript')) {
+        code = code.slice(13);
+      } else if (code.startsWith('```')) {
+        code = code.slice(3);
+      }
+      if (code.endsWith('```')) {
+        code = code.slice(0, -3);
+      }
+      code = code.trim();
     }
-    if (code.endsWith('```')) {
-      code = code.slice(0, -3);
+
+    // Ensure code starts with 'use client' if missing
+    if (!code.startsWith("'use client") && !code.startsWith('"use client')) {
+      code = "'use client';\n\n" + code;
     }
-    code = code.trim();
 
     // Extract component name
     const nameMatch = code.match(/export\s+default\s+function\s+(\w+)/);

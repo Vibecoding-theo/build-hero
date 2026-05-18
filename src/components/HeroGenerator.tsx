@@ -210,6 +210,8 @@ export default function HeroGenerator({ onAddToGallery }: HeroGeneratorProps) {
   const [prompt, setPrompt] = useState('');
   const [selectedStyles, setSelectedStyles] = useState<string[]>(['glassmorphism']);
   const [selectedFonts, setSelectedFonts] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [colorInput, setColorInput] = useState('#6366f1');
   const [generating, setGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [componentName, setComponentName] = useState('');
@@ -217,10 +219,13 @@ export default function HeroGenerator({ onAddToGallery }: HeroGeneratorProps) {
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState(false);
   const [styleSectionOpen, setStyleSectionOpen] = useState(true);
+  const [colorSectionOpen, setColorSectionOpen] = useState(false);
   const [fontSectionOpen, setFontSectionOpen] = useState(false);
   const [resultStyles, setResultStyles] = useState<string[]>([]);
   const [resultFonts, setResultFonts] = useState<string[]>([]);
   const [addedToGallery, setAddedToGallery] = useState(false);
+  const [modifyPrompt, setModifyPrompt] = useState('');
+  const [modifying, setModifying] = useState(false);
 
   const primaryStyle = STYLES.find((s) => s.id === selectedStyles[0]);
 
@@ -242,6 +247,18 @@ export default function HeroGenerator({ onAddToGallery }: HeroGeneratorProps) {
 
   const clearFonts = useCallback(() => setSelectedFonts([]), []);
 
+  const addColor = useCallback(() => {
+    setSelectedColors((prev) => prev.includes(colorInput) ? prev : [...prev, colorInput]);
+    const randomHex = () => '#' + Array.from({ length: 6 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+    setColorInput(randomHex());
+  }, [colorInput]);
+
+  const removeColor = useCallback((color: string) => {
+    setSelectedColors((prev) => prev.filter((c) => c !== color));
+  }, []);
+
+  const clearColors = useCallback(() => setSelectedColors([]), []);
+
   const generate = useCallback(async () => {
     if (!prompt.trim() || generating) return;
     setGenerating(true);
@@ -259,6 +276,7 @@ export default function HeroGenerator({ onAddToGallery }: HeroGeneratorProps) {
           prompt: prompt.trim(),
           styles: selectedStyles,
           fonts: selectedFonts,
+          colors: selectedColors,
         }),
       });
 
@@ -309,6 +327,39 @@ export default function HeroGenerator({ onAddToGallery }: HeroGeneratorProps) {
     setResultFonts([]);
     setAddedToGallery(false);
   }, []);
+
+  const modifyHero = useCallback(async () => {
+    if (!modifyPrompt.trim() || !generatedCode || modifying) return;
+    setModifying(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/generate-hero', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          existingCode: generatedCode,
+          modifyPrompt: modifyPrompt.trim(),
+          styles: selectedStyles,
+          fonts: selectedFonts,
+          colors: selectedColors,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Modification failed');
+
+      setGeneratedCode(data.code);
+      if (data.componentName) setComponentName(data.componentName);
+      setModifyPrompt('');
+      setAddedToGallery(false);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur de modification';
+      setError(message);
+    } finally {
+      setModifying(false);
+    }
+  }, [modifyPrompt, generatedCode, modifying, selectedStyles, selectedFonts, selectedColors]);
 
   /* ─── Result View ─── */
   if (generatedCode) {
@@ -402,6 +453,53 @@ export default function HeroGenerator({ onAddToGallery }: HeroGeneratorProps) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Modify input */}
+          <div className="flex-shrink-0 border-t border-white/[0.06] px-4 py-3 flex items-center gap-2" style={{ background: 'rgba(13,13,16,0.95)' }}>
+            <input
+              type="text"
+              value={modifyPrompt}
+              onChange={(e) => setModifyPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  modifyHero();
+                }
+              }}
+              placeholder="Modifier le hero... (ex: change la couleur en bleu, ajoute un bouton...)"
+              disabled={modifying}
+              className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-white/20 outline-none transition-all duration-200 focus:ring-1"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                ['--tw-ring-color' as string]: primaryStyle ? `${primaryStyle.color}60` : 'rgba(255,255,255,0.15)',
+              }}
+            />
+            <button
+              onClick={modifyHero}
+              disabled={!modifyPrompt.trim() || modifying}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              style={{
+                background: modifying
+                  ? 'rgba(255,255,255,0.05)'
+                  : primaryStyle
+                    ? `linear-gradient(135deg, ${primaryStyle.color}, ${primaryStyle.color}bb)`
+                    : 'rgba(255,255,255,0.08)',
+              }}
+            >
+              {modifying ? (
+                <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                  Modifier
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -635,6 +733,83 @@ export default function HeroGenerator({ onAddToGallery }: HeroGeneratorProps) {
                 </div>
               );
             })}
+          </Section>
+        </motion.div>
+
+        {/* Color Picker Section */}
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-4">
+          <Section
+            title="Couleurs"
+            subtitle={selectedColors.length > 0 ? `${selectedColors.length} couleur${selectedColors.length > 1 ? 's' : ''}` : 'Optionnel'}
+            open={colorSectionOpen}
+            onToggle={() => setColorSectionOpen(!colorSectionOpen)}
+            badge={selectedColors.length > 0 ? `${selectedColors.length}` : undefined}
+          >
+            <p className="text-[11px] text-white/20 mb-3">
+              Ajoute autant de couleurs que tu veux. Elles seront utilisées comme palette principale du hero.
+            </p>
+
+            {/* Color input + add button */}
+            <div className="flex items-center gap-3 mb-4">
+              <input
+                type="color"
+                value={colorInput}
+                onChange={(e) => setColorInput(e.target.value)}
+                className="w-10 h-10 rounded-xl cursor-pointer border-none bg-transparent p-0"
+                style={{ WebkitAppearance: 'none' }}
+              />
+              <input
+                type="text"
+                value={colorInput}
+                onChange={(e) => setColorInput(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-xl text-xs font-mono text-white/80 outline-none"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                maxLength={7}
+              />
+              <button
+                onClick={addColor}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium text-white transition-all duration-200 hover:opacity-90 cursor-pointer"
+                style={{ background: colorInput }}
+              >
+                <PlusIcon /> Ajouter
+              </button>
+            </div>
+
+            {/* Quick preset colors */}
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6', '#6366f1', '#a855f7', '#000000', '#ffffff', '#64748b'].map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setColorInput(c)}
+                  className="w-7 h-7 rounded-lg cursor-pointer transition-transform hover:scale-110 border"
+                  style={{ background: c, borderColor: 'rgba(255,255,255,0.1)' }}
+                />
+              ))}
+            </div>
+
+            {/* Selected colors */}
+            {selectedColors.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedColors.map((color) => (
+                  <div
+                    key={color}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+                    style={{ background: `${color}18`, border: `1px solid ${color}40` }}
+                  >
+                    <div className="w-3.5 h-3.5 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}60` }} />
+                    <span className="text-[10px] font-mono" style={{ color: `${color}cc` }}>{color}</span>
+                    <button onClick={() => removeColor(color)} className="ml-0.5 hover:opacity-70 transition-opacity cursor-pointer">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ color: `${color}cc` }}>
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <button onClick={clearColors} className="text-[10px] text-white/20 hover:text-white/40 transition-colors px-2 py-1 cursor-pointer">
+                  Tout effacer
+                </button>
+              </div>
+            )}
           </Section>
         </motion.div>
 
