@@ -209,51 +209,29 @@ const DynamicPreview = forwardRef<HTMLDivElement, DynamicPreviewProps>(
       setError(null);
       setLoading(true);
 
-      // Reset iframe to blank while loading new content
-      if (iframeRef.current) {
-        iframeRef.current.src = 'about:blank';
+      try {
+        const html = buildHtml(code, fonts);
+        if (!cancelled && iframeRef.current) {
+          iframeRef.current.srcdoc = html;
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : 'Preview failed';
+          setError(msg);
+          if (onRenderError) onRenderError(msg);
+        }
       }
 
-      const loadPreview = async () => {
-        try {
-          // Build the full HTML document
-          const html = buildHtml(code, fonts);
-
-          // POST to our API route to store the HTML and get an ID
-          const res = await fetch('/api/preview', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ html }),
-          });
-
-          if (cancelled) return;
-
-          if (!res.ok) throw new Error('Failed to create preview');
-
-          const { id } = await res.json();
-
-          if (cancelled) return;
-
-          // Load the iframe from a proper same-origin URL
-          // This allows Tailwind CDN's Web Worker to function correctly
-          if (iframeRef.current) {
-            iframeRef.current.src = `/api/preview?id=${id}`;
-          }
-        } catch (err) {
-          if (!cancelled) {
-            const msg = err instanceof Error ? err.message : 'Preview failed';
-            setError(msg);
-            if (onRenderError) onRenderError(msg);
-          }
-        } finally {
-          if (!cancelled) setLoading(false);
-        }
+      // Listen for iframe load to dismiss loading spinner
+      const iframe = iframeRef.current;
+      const onLoad = () => {
+        if (!cancelled) setLoading(false);
       };
-
-      loadPreview();
+      iframe?.addEventListener('load', onLoad);
 
       return () => {
         cancelled = true;
+        iframe?.removeEventListener('load', onLoad);
       };
     }, [code, fonts, onRenderError]);
 
