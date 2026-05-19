@@ -187,6 +187,34 @@
 .animate-rotate-geometric { animation: rotateGeometric 20s linear infinite; }
 .animate-scanline { animation: scanline 4s linear infinite; }
 
+@keyframes bloom {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes petalFall {
+  0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(110vh) translateX(80px) rotate(720deg); opacity: 0; }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes vineGrow {
+  0% { stroke-dashoffset: 300; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.animate-bloom { animation: bloom 1.2s ease-out forwards; }
+.animate-petal-fall { animation: petalFall linear infinite; }
+.animate-sway { animation: sway 4s ease-in-out infinite; }
+.animate-vine-grow { animation: vineGrow 3s ease-out forwards; }
+
 /* Hero-specific scrollbar hiding */
 .hero-showcase::-webkit-scrollbar { display: none; }
 .hero-showcase { -ms-overflow-style: none; scrollbar-width: none; }

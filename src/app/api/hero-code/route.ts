@@ -12,6 +12,16 @@ const HERO_FILES: Record<string, string> = {
   retro: 'HeroRetroVintage.tsx',
   geometric: 'HeroGeometric.tsx',
   aurora: 'HeroAurora.tsx',
+  fleur: 'HeroFleur.tsx',
+  bento: 'BentoDashboardHero.tsx',
+  brutalisttech: 'BrutalistTechHero.tsx',
+  magazine: 'MagazineEditorialHero.tsx',
+  interactivemouse: 'InteractiveMouseHero.tsx',
+  splitshowcase: 'SplitShowcaseHero.tsx',
+  aimorphing: 'AIMorphingHero.tsx',
+  floatinglayers: 'FloatingLayersHero.tsx',
+  dynamicgradient: 'DynamicGradientHero.tsx',
+  timeline: 'TimelineHero.tsx',
 };
 
 export async function GET(request: NextRequest) {

@@ -8,7 +8,8 @@
       "Bash(rm:*)",
       "Bash(grep:*)",
       "Bash(npx tsc:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

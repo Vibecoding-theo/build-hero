@@ -12,6 +12,16 @@ import HeroDarkLuxury from '@/components/heroes/HeroDarkLuxury';
 import HeroRetroVintage from '@/components/heroes/HeroRetroVintage';
 import HeroGeometric from '@/components/heroes/HeroGeometric';
 import HeroAurora from '@/components/heroes/HeroAurora';
+import HeroFleur from '@/components/heroes/HeroFleur';
+import BentoDashboardHero from '@/components/heroes/BentoDashboardHero';
+import BrutalistTechHero from '@/components/heroes/BrutalistTechHero';
+import MagazineEditorialHero from '@/components/heroes/MagazineEditorialHero';
+import InteractiveMouseHero from '@/components/heroes/InteractiveMouseHero';
+import SplitShowcaseHero from '@/components/heroes/SplitShowcaseHero';
+import AIMorphingHero from '@/components/heroes/AIMorphingHero';
+import FloatingLayersHero from '@/components/heroes/FloatingLayersHero';
+import DynamicGradientHero from '@/components/heroes/DynamicGradientHero';
+import TimelineHero from '@/components/heroes/TimelineHero';
 import HeroGenerator from '@/components/HeroGenerator';
 import DynamicPreview from '@/components/DynamicPreview';
 
@@ -39,6 +49,16 @@ const heroes: HeroConfig[] = [
   { id: 'retro', name: 'Retro Vintage', subtitle: 'Chaleureux & Nostalgique', component: <HeroRetroVintage />, borderStyle: 'square', colorAccent: '#8B6914', emoji: '📻', borderLabel: 'Carré' },
   { id: 'geometric', name: 'Géométrique', subtitle: 'Précis & Structuré', component: <HeroGeometric />, borderStyle: 'square', colorAccent: '#E63946', emoji: '🔷', borderLabel: 'Carré' },
   { id: 'aurora', name: 'Aurora Boréale', subtitle: 'Cosmique & Éthéré', component: <HeroAurora />, borderStyle: 'pill', colorAccent: '#10B981', emoji: '🌌', borderLabel: 'Pill' },
+  { id: 'fleur', name: 'Botanica', subtitle: 'Floral & Poétique', component: <HeroFleur />, borderStyle: 'rounded', colorAccent: '#E8507E', emoji: '🌸', borderLabel: 'Arrondi' },
+  { id: 'bento', name: 'Bento Dashboard', subtitle: 'Données & Analytique', component: <BentoDashboardHero />, borderStyle: 'rounded', colorAccent: '#3b82f6', emoji: '📊', borderLabel: 'Arrondi' },
+  { id: 'brutalisttech', name: 'Brutalist Tech', subtitle: 'Cyber & Brutaliste', component: <BrutalistTechHero />, borderStyle: 'square', colorAccent: '#ef4444', emoji: '⌨️', borderLabel: 'Carré' },
+  { id: 'magazine', name: 'Magazine Éditorial', subtitle: 'Élégance & Éditorial', component: <MagazineEditorialHero />, borderStyle: 'mixed', colorAccent: '#C2654A', emoji: '📖', borderLabel: 'Mixte' },
+  { id: 'interactivemouse', name: 'Interactive Mouse', subtitle: 'Profondeur & Dynamique', component: <InteractiveMouseHero />, borderStyle: 'rounded', colorAccent: '#7c3aed', emoji: '🎯', borderLabel: 'Arrondi' },
+  { id: 'splitshowcase', name: 'Split Showcase', subtitle: 'Éclaté & Moderne', component: <SplitShowcaseHero />, borderStyle: 'mixed', colorAccent: '#0ea5e9', emoji: '🔀', borderLabel: 'Mixte' },
+  { id: 'aimorphing', name: 'AI Morphing', subtitle: 'Morphique & Intelligent', component: <AIMorphingHero />, borderStyle: 'pill', colorAccent: '#8b5cf6', emoji: '🧠', borderLabel: 'Pill' },
+  { id: 'floatinglayers', name: 'Floating Layers', subtitle: 'Superposé & Aérien', component: <FloatingLayersHero />, borderStyle: 'rounded', colorAccent: '#f59e0b', emoji: '🧊', borderLabel: 'Arrondi' },
+  { id: 'dynamicgradient', name: 'Dynamic Gradient', subtitle: 'Fluide & Chromatique', component: <DynamicGradientHero />, borderStyle: 'pill', colorAccent: '#ec4899', emoji: '🌈', borderLabel: 'Pill' },
+  { id: 'timeline', name: 'Timeline', subtitle: 'Chronologique & Scroll', component: <TimelineHero />, borderStyle: 'mixed', colorAccent: '#14b8a6', emoji: '⏳', borderLabel: 'Mixte' },
 ];
 
 const FILENAMES: Record<string, string> = {
@@ -51,6 +71,16 @@ const FILENAMES: Record<string, string> = {
   retro: 'HeroRetroVintage.tsx',
   geometric: 'HeroGeometric.tsx',
   aurora: 'HeroAurora.tsx',
+  fleur: 'HeroFleur.tsx',
+  bento: 'BentoDashboardHero.tsx',
+  brutalisttech: 'BrutalistTechHero.tsx',
+  magazine: 'MagazineEditorialHero.tsx',
+  interactivemouse: 'InteractiveMouseHero.tsx',
+  splitshowcase: 'SplitShowcaseHero.tsx',
+  aimorphing: 'AIMorphingHero.tsx',
+  floatinglayers: 'FloatingLayersHero.tsx',
+  dynamicgradient: 'DynamicGradientHero.tsx',
+  timeline: 'TimelineHero.tsx',
 };
 
 function CopyIcon({ size = 16 }: { size?: number }) {
