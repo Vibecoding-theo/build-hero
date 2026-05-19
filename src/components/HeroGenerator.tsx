@@ -19,15 +19,22 @@ const STYLES: StyleOption[] = [
   { id: 'glassmorphism', name: 'Glassmorphism', emoji: '🪟', color: '#764ba2', border: 'Arrondi', category: 'Moderne' },
   { id: 'brutalism', name: 'Brutalism', emoji: '📐', color: '#FF00FF', border: 'Carré', category: 'Extrême' },
   { id: 'cyberpunk', name: 'Cyberpunk', emoji: '🌆', color: '#bc13fe', border: 'Carré', category: 'Futuriste' },
-  { id: 'minimal', name: 'Minimaliste', emoji: '🍃', color: '#C4B5A5', border: 'Mixte', category: 'Épuré' },
+  { id: 'japandi', name: 'Japandi', emoji: '🍃', color: '#C4B5A5', border: 'Mixte', category: 'Épuré' },
   { id: 'organic', name: 'Organique', emoji: '🎨', color: '#e94560', border: 'Pill', category: 'Fluide' },
-  { id: 'luxury', name: 'Dark Luxury', emoji: '🖤', color: '#d4af37', border: 'Mixte', category: 'Premium' },
+  { id: 'darkluxury', name: 'Dark Luxury', emoji: '🖤', color: '#d4af37', border: 'Mixte', category: 'Premium' },
   { id: 'retro', name: 'Retro Vintage', emoji: '📻', color: '#8B6914', border: 'Carré', category: 'Nostalgie' },
   { id: 'geometric', name: 'Géométrique', emoji: '🔷', color: '#E63946', border: 'Carré', category: 'Structure' },
   { id: 'aurora', name: 'Aurora', emoji: '🌌', color: '#10B981', border: 'Pill', category: 'Cosmique' },
-  { id: 'gradient', name: 'Gradient', emoji: '🌈', color: '#8B5CF6', border: 'Arrondi', category: 'Vibrant' },
-  { id: 'neumorphism', name: 'Neumorphism', emoji: '🫧', color: '#94a3b8', border: 'Arrondi', category: 'Subtil' },
-  { id: 'darkmode', name: 'Dark Mode', emoji: '🌙', color: '#64748b', border: 'Mixte', category: 'Moderne' },
+  { id: 'fleur', name: 'Botanica', emoji: '🌸', color: '#E8507E', border: 'Arrondi', category: 'Naturel' },
+  { id: 'bento', name: 'Bento Dashboard', emoji: '📊', color: '#3b82f6', border: 'Arrondi', category: 'Données' },
+  { id: 'brutalisttech', name: 'Brutalist Tech', emoji: '⌨️', color: '#ef4444', border: 'Carré', category: 'Cyber' },
+  { id: 'magazine', name: 'Magazine Éditorial', emoji: '📖', color: '#C2654A', border: 'Mixte', category: 'Éditorial' },
+  { id: 'interactivemouse', name: 'Interactive Mouse', emoji: '🎯', color: '#7c3aed', border: 'Arrondi', category: 'Interactif' },
+  { id: 'splitshowcase', name: 'Split Showcase', emoji: '🔀', color: '#0ea5e9', border: 'Mixte', category: 'Moderne' },
+  { id: 'aimorphing', name: 'AI Morphing', emoji: '🧠', color: '#8b5cf6', border: 'Pill', category: 'Intelligent' },
+  { id: 'floatinglayers', name: 'Floating Layers', emoji: '🧊', color: '#f59e0b', border: 'Arrondi', category: 'Aérien' },
+  { id: 'dynamicgradient', name: 'Dynamic Gradient', emoji: '🌈', color: '#ec4899', border: 'Pill', category: 'Vibrant' },
+  { id: 'timeline', name: 'Timeline', emoji: '⏳', color: '#14b8a6', border: 'Mixte', category: 'Chronologique' },
 ];
 
 interface FontOption {
@@ -40,24 +47,55 @@ interface FontOption {
 }
 
 const FONTS: FontOption[] = [
+  // ── Sans-serif ──
   { id: 'inter', name: 'Inter', family: "'Inter', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '400' },
   { id: 'poppins', name: 'Poppins', family: "'Poppins', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '600' },
   { id: 'montserrat', name: 'Montserrat', family: "'Montserrat', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '500' },
   { id: 'spaceGrotesk', name: 'Space Grotesk', family: "'Space Grotesk', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '500' },
   { id: 'outfit', name: 'Outfit', family: "'Outfit', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '400' },
   { id: 'jakarta', name: 'Plus Jakarta Sans', family: "'Plus Jakarta Sans', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '500' },
+  { id: 'manrope', name: 'Manrope', family: "'Manrope', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '500' },
+  { id: 'figtree', name: 'Figtree', family: "'Figtree', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'geist', name: 'Geist', family: "'Geist', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'sora', name: 'Sora', family: "'Sora', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '500' },
+  { id: 'clashDisplay', name: 'Clash Display', family: "'Clash Display', sans-serif", category: 'Sans-serif', sample: 'Aa Bb Cc 123', weight: '600' },
+  // ── Serif ──
   { id: 'playfair', name: 'Playfair Display', family: "'Playfair Display', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '700' },
   { id: 'lora', name: 'Lora', family: "'Lora', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '400' },
   { id: 'merriweather', name: 'Merriweather', family: "'Merriweather', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '400' },
   { id: 'crimson', name: 'Crimson Text', family: "'Crimson Text', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'spectral', name: 'Spectral', family: "'Spectral', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'cormorant', name: 'Cormorant Garamond', family: "'Cormorant Garamond', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '500' },
+  { id: 'fraunces', name: 'Fraunces', family: "'Fraunces', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '600' },
+  { id: 'newsreader', name: 'Newsreader', family: "'Newsreader', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'bitter', name: 'Bitter', family: "'Bitter', serif", category: 'Serif', sample: 'Aa Bb Cc 123', weight: '400' },
+  // ── Display ──
   { id: 'unbounded', name: 'Unbounded', family: "'Unbounded', sans-serif", category: 'Display', sample: 'Aa Bb Cc 123', weight: '700' },
   { id: 'oswald', name: 'Oswald', family: "'Oswald', sans-serif", category: 'Display', sample: 'Aa Bb Cc 123', weight: '500' },
   { id: 'bebas', name: 'Bebas Neue', family: "'Bebas Neue', sans-serif", category: 'Display', sample: 'Aa Bb Cc 123', weight: '400' },
   { id: 'righteous', name: 'Righteous', family: "'Righteous', cursive", category: 'Display', sample: 'Aa Bb Cc 123', weight: '400' },
   { id: 'syne', name: 'Syne', family: "'Syne', sans-serif", category: 'Display', sample: 'Aa Bb Cc 123', weight: '700' },
+  { id: 'archivoBlack', name: 'Archivo Black', family: "'Archivo Black', sans-serif", category: 'Display', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'koulen', name: 'Koulen', family: "'Koulen', sans-serif", category: 'Display', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'delaGothic', name: 'Dela Gothic One', family: "'Dela Gothic One', cursive", category: 'Display', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'fugazOne', name: 'Fugaz One', family: "'Fugaz One', sans-serif", category: 'Display', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'rubikMono', name: 'Rubik Mono One', family: "'Rubik Mono One', sans-serif", category: 'Display', sample: 'Aa Bb Cc 123', weight: '400' },
+  // ── Handwriting ──
   { id: 'caveat', name: 'Caveat', family: "'Caveat', cursive", category: 'Handwriting', sample: 'Aa Bb Cc 123', weight: '400' },
   { id: 'satisfy', name: 'Satisfy', family: "'Satisfy', cursive", category: 'Handwriting', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'dancingScript', name: 'Dancing Script', family: "'Dancing Script', cursive", category: 'Handwriting', sample: 'Aa Bb Cc 123', weight: '600' },
+  { id: 'pacifico', name: 'Pacifico', family: "'Pacifico', cursive", category: 'Handwriting', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'lobster', name: 'Lobster', family: "'Lobster', cursive", category: 'Handwriting', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'kalam', name: 'Kalam', family: "'Kalam', cursive", category: 'Handwriting', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'shadowsIntoLight', name: 'Shadows Into Light', family: "'Shadows Into Light', cursive", category: 'Handwriting', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'indieFlower', name: 'Indie Flower', family: "'Indie Flower', cursive", category: 'Handwriting', sample: 'Aa Bb Cc 123', weight: '400' },
+  // ── Mono ──
   { id: 'dmMono', name: 'DM Mono', family: "'DM Mono', monospace", category: 'Mono', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'jetbrainsMono', name: 'JetBrains Mono', family: "'JetBrains Mono', monospace", category: 'Mono', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'firaCode', name: 'Fira Code', family: "'Fira Code', monospace", category: 'Mono', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'ibmPlexMono', name: 'IBM Plex Mono', family: "'IBM Plex Mono', monospace", category: 'Mono', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'spaceMono', name: 'Space Mono', family: "'Space Mono', monospace", category: 'Mono', sample: 'Aa Bb Cc 123', weight: '400' },
+  { id: 'sourceCode', name: 'Source Code Pro', family: "'Source Code Pro', monospace", category: 'Mono', sample: 'Aa Bb Cc 123', weight: '400' },
 ];
 
 const PROMPT_SUGGESTIONS = [
